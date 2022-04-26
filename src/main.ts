@@ -10,6 +10,7 @@ import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { Config } from './config.js';
+import KafkaConsumer from './consumer.js';
 
 const nodePath = resolve(process.argv[1]);
 const modulePath = resolve(fileURLToPath(import.meta.url));
@@ -26,6 +27,8 @@ export default function main(port: number = Config.port) {
 
   if (isCLI) {
     server.listen(port);
+    const consumer = new KafkaConsumer();
+    consumer.startConsumer();
     // eslint-disable-next-line no-console
     console.log(`Listening on port: ${port}`);
   }
