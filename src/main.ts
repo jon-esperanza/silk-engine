@@ -34,20 +34,20 @@ export default function main(port: number = Config.port) {
     const consumer = new KafkaConsumer(consumerSetup, Config.kafkaTopic);
     consumer.startConsumer().then(() => {
       // eslint-disable-next-line no-console
-      console.log(` 🚀  Listening on port: ${port}`);
+      console.log(`🚂 Listening on port: ${port}`);
     });
 
     function gracefulShutdown() {
       // eslint-disable-next-line no-console
-      console.log('\nStarting shutdown process...');
+      console.log('\n⚠️  Starting shutdown process...');
       setTimeout(() => {
         // eslint-disable-next-line no-console
-        console.log('🤞 Shutting down application');
+        console.log('\t🤞 Shutting down application');
         consumer.shutdown();
         // stop the server from accepting new connections
         server.close(function () {
           // eslint-disable-next-line no-console
-          console.log('👋 All requests stopped, shutting down');
+          console.log('\t👋 All requests stopped, shutting down');
           // once the server is not accepting connections, exit
           process.exit();
         });
