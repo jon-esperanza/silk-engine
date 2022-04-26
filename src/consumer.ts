@@ -1,16 +1,17 @@
 import { Consumer, ConsumerSubscribeTopic, EachMessagePayload, Kafka } from 'kafkajs';
-import { Config } from './config.js';
 
 export default class KafkaConsumer {
   private kafkaConsumer: Consumer;
+  private kafkaTopic: string;
 
-  public constructor() {
-    this.kafkaConsumer = this.createKafkaConsumer();
+  public constructor(consumer: Consumer, topic: string) {
+    this.kafkaConsumer = consumer;
+    this.kafkaTopic = topic;
   }
 
   public async startConsumer(): Promise<void> {
     const topic: ConsumerSubscribeTopic = {
-      topic: Config.kafkaTopic,
+      topic: this.kafkaTopic,
       fromBeginning: false,
     };
 
@@ -36,7 +37,7 @@ export default class KafkaConsumer {
     await this.kafkaConsumer.disconnect();
   }
 
-  private createKafkaConsumer(): Consumer {
+  public static createKafkaConsumerSASL(saslUsername: string, saslPassword: string, broker: string): Consumer {
     const kafka = new Kafka({
       clientId: 'insightql-consumer',
       ssl: {
@@ -44,10 +45,10 @@ export default class KafkaConsumer {
       },
       sasl: {
         mechanism: 'plain', // scram-sha-256 or scram-sha-512,
-        username: Config.kafkaSASLUsername,
-        password: Config.kafkaSASLPassword,
+        username: saslUsername,
+        password: saslPassword,
       },
-      brokers: [Config.kafkaBroker],
+      brokers: [broker],
     });
     const consumer = kafka.consumer({ groupId: 'insightql-consumers' });
     return consumer;

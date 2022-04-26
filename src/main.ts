@@ -24,13 +24,38 @@ export default function main(port: number = Config.port) {
   };
 
   const server = createServer(requestListener);
-
   if (isCLI) {
     server.listen(port);
-    const consumer = new KafkaConsumer();
-    consumer.startConsumer();
-    // eslint-disable-next-line no-console
-    console.log(`Listening on port: ${port}`);
+    const consumerSetup = KafkaConsumer.createKafkaConsumerSASL(
+      Config.kafkaSASLUsername,
+      Config.kafkaSASLPassword,
+      Config.kafkaBroker,
+    );
+    const consumer = new KafkaConsumer(consumerSetup, Config.kafkaTopic);
+    consumer.startConsumer().then(() => {
+      // eslint-disable-next-line no-console
+      console.log(` 🚀  Listening on port: ${port}`);
+    });
+
+    function gracefulShutdown() {
+      // eslint-disable-next-line no-console
+      console.log('\nStarting shutdown process...');
+      setTimeout(() => {
+        // eslint-disable-next-line no-console
+        console.log('🤞 Shutting down application');
+        consumer.shutdown();
+        // stop the server from accepting new connections
+        server.close(function () {
+          // eslint-disable-next-line no-console
+          console.log('👋 All requests stopped, shutting down');
+          // once the server is not accepting connections, exit
+          process.exit();
+        });
+      }, 0);
+    }
+
+    process.on('SIGTERM', gracefulShutdown);
+    process.on('SIGINT', gracefulShutdown);
   }
 
   return server;
