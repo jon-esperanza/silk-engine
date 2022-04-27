@@ -1,13 +1,7 @@
 name: ci
 
 on:
-  push:
-    branches:
-      - master
-      - '[0-9]+.x'
-    tags:
-      - '*'
-  pull_request_target:
+  pull_request:
     branches:
       - master
       - '[0-9]+.x'
