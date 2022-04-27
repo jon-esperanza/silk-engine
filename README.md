@@ -1,7 +1,26 @@
 # insightQL
+portable stream processing engine for cached materialized views.
 
-## Characteristics
- - easily integrated query engine for server (backend) or client (frontend) services. It integrates just as any other microservice would, independently (stateless). Makes it simple to implement complex database queries into applications. 
- - designed to perform queries over large segments of data, and is not designed for point reads and updates of single rows of data. 
- - adaptive not only to different query characteristics, but also combinations of characteristics. Without adaptiveness, it would be necessary to narrowly partition workloads and tune configuration for each workload independently.
- - can complete the "distributed work" as a single instance, no need for coordinator and worker nodes. This query engine assumes both roles.
+## Project vision
+
+**Independent**
+<br>Simple and stateless integration into microservices. 
+
+**Read optimized**
+<br>Designed to perform complex read queries, and is not designed to execute writes and updates to databases.
+
+**Flexible**
+<br>Freedom of complex queries and configuration with any database.
+
+**Single instance**
+<br>No need to distribute the preparation and execution of queries. This query engine assumes both roles.
+
+**Precomputed**
+<br>Contents of cache are computed before it is needed.
+
+**Clever caching**
+<br>Executed queries are cached so that reads from this query engine are served quickly. Sequential event consumption allows cache invalidation
+
+**Fresh data**
+<br>Event-driven architecture allows the data in our cache to remain fresh and consistently synchronized as the data changes.
+
