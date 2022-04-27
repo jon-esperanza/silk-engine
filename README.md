@@ -1,2 +1,2 @@
 # insightQL
-easily integrated query engine for server (backend) or client (frontend) services. It integrates just as any other microservice would, independently (stateless). Makes it simple to implement complex database queries into applications. Builds queries as events are consumed. 
+easily integrated query engine for server (backend) or client (frontend) services. It integrates just as any other microservice would, independently (stateless). Makes it simple to implement complex database queries into applications. Builds queries as events are consumed. insightQL is designed to perform queries over large segments of data, and is not designed for point reads and updates of single rows of data
