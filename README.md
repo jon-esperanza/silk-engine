@@ -1,5 +1,6 @@
 # insightQL
-portable stream processing engine for cached materialized views.
+simple, portable stream processing engine.
+<br> inspired by Robinhood's [Faust](https://faust.readthedocs.io/en/latest/introduction.html)
 
 ## Project vision
 
@@ -24,3 +25,9 @@ portable stream processing engine for cached materialized views.
 **Fresh data**
 <br>Event-driven architecture allows the data in our cache to remain fresh and consistently synchronized as the data changes.
 
+## Desired use cases
+- Event processing
+- Distributed joins & aggregations
+- Asynchronous job execution
+- Data denormalization
+- Distributed computing
