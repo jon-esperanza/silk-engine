@@ -1,12 +1,15 @@
 import { Consumer, ConsumerSubscribeTopic, EachMessagePayload, Kafka } from 'kafkajs';
+import PostgresDB from 'src/db/postgres';
 
 export default class KafkaConsumer {
   private kafkaConsumer: Consumer;
   private kafkaTopic: string;
+  private db: PostgresDB;
 
-  public constructor(consumer: Consumer, topic: string) {
+  public constructor(consumer: Consumer, topic: string, db: PostgresDB) {
     this.kafkaConsumer = consumer;
     this.kafkaTopic = topic;
+    this.db = db;
   }
 
   public async startConsumer(): Promise<void> {

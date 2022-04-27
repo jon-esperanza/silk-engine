@@ -10,7 +10,8 @@ import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { Config } from './config.js';
-import KafkaConsumer from './consumer.js';
+import PostgresDB from './db/postgres.js';
+import KafkaConsumer from './kafka/consumer.js';
 
 const nodePath = resolve(process.argv[1]);
 const modulePath = resolve(fileURLToPath(import.meta.url));
@@ -25,18 +26,33 @@ export default function main(port: number = Config.port) {
 
   const server = createServer(requestListener);
   if (isCLI) {
+    // STARTUP
     server.listen(port);
     const consumerSetup = KafkaConsumer.createKafkaConsumerSASL(
       Config.kafkaSASLUsername,
       Config.kafkaSASLPassword,
       Config.kafkaBroker,
     );
-    const consumer = new KafkaConsumer(consumerSetup, Config.kafkaTopic);
+    const dbConfig = {
+      user: Config.postgresUsername,
+      host: Config.postgresHost,
+      database: Config.postgresDatabase,
+      password: Config.postgresPassword,
+      port: Config.postgresPort,
+    };
+
+    const db = new PostgresDB(dbConfig);
+    const consumer = new KafkaConsumer(consumerSetup, Config.kafkaTopic, db);
+    db.startConnection().then(() => {
+      // eslint-disable-next-line no-console
+      console.log(`🚂 Connected to postgresQL database.`);
+    });
     consumer.startConsumer().then(() => {
       // eslint-disable-next-line no-console
       console.log(`🚂 Listening on port: ${port}`);
     });
 
+    // SHUTDOWN
     function gracefulShutdown() {
       // eslint-disable-next-line no-console
       console.log('\n⚠️  Starting shutdown process...');

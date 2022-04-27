@@ -19,6 +19,7 @@
   "dependencies": {
     "dotenv": "^16.0.0",
     "kafkajs": "^1.16.0",
+    "ts-postgres": "^1.2.1",
     "tslib": "^2.3.1"
   },
   "devDependencies": {
@@ -28,6 +29,7 @@
     "@jest/types": "^27.5.1",
     "@types/jest": "^27.4.1",
     "@types/node": "^17.0.23",
+    "@types/pg": "^8.6.5",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.17.0",
     "@typescript-eslint/parser": "^5.17.0",
