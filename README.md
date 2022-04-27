@@ -4,8 +4,8 @@ simple, portable stream processing engine.
 
 ## Project vision
 
-**Independent**
-<br>Simple and stateless integration into microservices. 
+**Distributed**
+<br>Simple and stateless integration into microservices because of the independence of each **insightQL** instance. Deploy as many as you need! 
 
 **Read optimized**
 <br>Designed to perform complex read queries, and is not designed to execute writes and updates to databases.
