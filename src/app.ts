@@ -34,10 +34,16 @@ class App {
     process.on('SIGINT', this.gracefulShutdown);
   }
 
+  /**
+   * @param consumer consumer to add to app
+   */
   public addConsumer(consumer: KafkaConsumer) {
     this.consumers.push(consumer);
   }
 
+  /**
+   * iterate over consumers added to app, connect them to respective kafka topic
+   */
   private async initConsumers(): Promise<void> {
     this.consumers.forEach(async consumer => {
       consumer.startConsumer().then(() => {
@@ -46,6 +52,10 @@ class App {
       });
     });
   }
+
+  /**
+   * disconnect all consumers on app from kafka topics
+   */
   private async endConsumers(): Promise<void> {
     this.consumers.forEach(async consumer => {
       consumer.shutdown().then(() => {
@@ -54,6 +64,10 @@ class App {
       });
     });
   }
+
+  /**
+   * gracefully terminate app
+   */
   private gracefulShutdown() {
     // eslint-disable-next-line no-console
     console.log('\n⚠️  Starting shutdown process...');

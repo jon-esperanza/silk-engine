@@ -1,3 +1,13 @@
+/**
+ * example for how to use insightQL
+ *  - create consumer object
+ *  - subscribe consumer to topics
+ *  - define model to deserialize messages
+ *  - define agent and asynchronous job to execute
+ *  - add agent to consumer workflow
+ *  - add consumer to app
+ *  - init app
+ */
 import app from './app.js';
 import { Config } from './config.js';
 import KafkaConsumer from './kafka/consumer.js';
