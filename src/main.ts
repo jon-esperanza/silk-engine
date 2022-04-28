@@ -11,7 +11,7 @@ import { resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { Config } from './config.js';
 import PostgresDB from './db/postgres.js';
-import KafkaConsumer from './kafka/consumer.js';
+import KafkaConsumer, { Agent, DataObject } from './kafka/consumer.js';
 
 const nodePath = resolve(process.argv[1]);
 const modulePath = resolve(fileURLToPath(import.meta.url));
@@ -42,11 +42,25 @@ export default function main(port: number = Config.port) {
     };
 
     const db = new PostgresDB(dbConfig);
-    const consumer = new KafkaConsumer(consumerSetup, Config.kafkaTopic, db);
+    const consumer = new KafkaConsumer(consumerSetup);
     db.startConnection().then(() => {
       // eslint-disable-next-line no-console
       console.log(`🚂 Connected to postgresQL database.`);
     });
+    consumer.subscribe(Config.kafkaTopic);
+    class Data extends DataObject {
+      ordertime!: number;
+      orderid!: number;
+    }
+    const agent: Agent = {
+      topic: Config.kafkaTopic,
+      model: new Data(),
+      job: async message => {
+        // eslint-disable-next-line no-console
+        console.log('agent executed: ' + message.orderid);
+      },
+    };
+    consumer.addAgent(agent);
     consumer.startConsumer().then(() => {
       // eslint-disable-next-line no-console
       console.log(`🚂 Listening on port: ${port}`);

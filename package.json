@@ -17,6 +17,7 @@
     "test:coverage": "npm run test -- --coverage"
   },
   "dependencies": {
+    "class-transformer": "^0.5.1",
     "dotenv": "^16.0.0",
     "kafkajs": "^1.16.0",
     "ts-postgres": "^1.2.1",
