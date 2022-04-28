@@ -8,15 +8,21 @@
 import 'dotenv/config';
 import { Config } from './config.js';
 import { Application } from 'express';
+import * as redis from 'redis';
 import express from 'express';
 import KafkaConsumer from './kafka/consumer.js';
 import { Server } from 'http';
+import { createDatabase } from './db/inMemory.js';
+import { Database, redisConfig } from './db/types.js';
 
 class App {
   private consumers: KafkaConsumer[];
   private port: number = Config.port;
   private app: Application;
   private server!: Server;
+  private redisEnabled: boolean = false;
+  private redisUrl: string = '';
+  public db!: Database | any;
 
   constructor() {
     this.consumers = [];
@@ -24,6 +30,15 @@ class App {
   }
 
   public startServer() {
+    if (this.redisEnabled) {
+      this.db = redis.createClient({ url: this.redisUrl });
+      this.db.connect().then(() => {
+        // eslint-disable-next-line no-console
+        console.log(`🚂 Connected to redis.`);
+      });
+    } else {
+      this.db = createDatabase();
+    }
     this.server = this.app.listen(this.port, () => {
       this.initConsumers().then(() => {
         // eslint-disable-next-line no-console
@@ -39,6 +54,15 @@ class App {
    */
   public addConsumer(consumer: KafkaConsumer) {
     this.consumers.push(consumer);
+  }
+
+  public useRedis(config: string | redisConfig) {
+    if (typeof config === 'string') {
+      this.redisUrl = config;
+    } else {
+      this.redisUrl = `redis://${config.username}:${config.password}@${config.host}:${config.port}`;
+    }
+    this.redisEnabled = true;
   }
 
   /**

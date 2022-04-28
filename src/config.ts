@@ -11,4 +11,11 @@ export const Config = {
   postgresDatabase: process.env.POSTGRES_DATABASE || '',
   postgresPassword: process.env.POSTGRES_PASSWORD || '',
   postgresPort: parseInt(process.env.POSTGRES_PORT || '5432'),
+
+  // redis
+  redisUrl: process.env.REDIS_URL || '',
+  redisUsername: process.env.REDIS_USERNAME || '',
+  redisPassword: process.env.REDIS_PASSWORD || '',
+  redisHost: process.env.REDIS_HOST || '',
+  redisPort: process.env.REDIS_PORT || '6380',
 };
