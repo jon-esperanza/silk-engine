@@ -1,49 +1,16 @@
 import { Consumer, ConsumerSubscribeTopic, EachMessagePayload, Kafka, KafkaMessage } from 'kafkajs';
-export class DataObject {
-  [keys: string]: any;
-  /**
-   * Helps ensure that this object is ready for the next message serialization.
-   * @param obj resets this DataObject
-   */
-  public resetProperties(obj: this = this) {
-    Object.keys(obj).map(key => {
-      // Test if it's an Object
-      if (obj[key] === Object(obj[key])) {
-        this.resetProperties(obj[key]);
-        return;
-      }
-      if (obj[key] instanceof Array) obj[key] = [];
-      else obj[key] = undefined;
-    });
-  }
-  /**
-   * Helps ensure that the message serialization was successful.
-   * @param obj validates this DataObject
-   * @returns
-   */
-  public validObject(obj: this = this) {
-    for (const key in obj) {
-      if (obj[key] === undefined) return false;
-    }
-    return true;
-  }
-}
+import { Agent, KafkaSASLConfig } from './types.js';
+import { v4 as uuid } from 'uuid';
 
-type Job = {
-  (...args: any): Promise<void>;
-};
-export interface Agent {
-  topic: string;
-  model: DataObject;
-  job: Job;
-}
 export default class KafkaConsumer {
+  public consumerId: string;
   private kafkaConsumer: Consumer;
   private kafkaTopics: ConsumerSubscribeTopic[];
   private kafkaAgents: Agent[];
 
-  public constructor(consumer: Consumer) {
-    this.kafkaConsumer = consumer;
+  public constructor(consumerConfig: KafkaSASLConfig) {
+    this.consumerId = uuid();
+    this.kafkaConsumer = this.createKafkaConsumerSASL(consumerConfig);
     this.kafkaTopics = [];
     this.kafkaAgents = [];
   }
@@ -93,7 +60,7 @@ export default class KafkaConsumer {
     await this.kafkaConsumer.disconnect();
   }
 
-  public static createKafkaConsumerSASL(saslUsername: string, saslPassword: string, broker: string): Consumer {
+  private createKafkaConsumerSASL(config: KafkaSASLConfig): Consumer {
     const kafka = new Kafka({
       clientId: 'insightql-consumer',
       ssl: {
@@ -101,10 +68,10 @@ export default class KafkaConsumer {
       },
       sasl: {
         mechanism: 'plain', // scram-sha-256 or scram-sha-512,
-        username: saslUsername,
-        password: saslPassword,
+        username: config.saslUsername,
+        password: config.saslPassword,
       },
-      brokers: [broker],
+      brokers: [config.broker],
     });
     const consumer = kafka.consumer({ groupId: 'insightql-consumers' });
     return consumer;

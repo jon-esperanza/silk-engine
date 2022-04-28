@@ -1,96 +1,33 @@
-#!/usr/bin/env node
-
-/**
- * This is a sample HTTP server.
- * Replace this with your implementation.
- */
-
-import 'dotenv/config';
-import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { resolve } from 'path';
-import { fileURLToPath } from 'url';
+import app from './app.js';
 import { Config } from './config.js';
-import PostgresDB from './db/postgres.js';
-import KafkaConsumer, { Agent, DataObject } from './kafka/consumer.js';
+import KafkaConsumer from './kafka/consumer.js';
+import { Agent, DataObject } from './kafka/types.js';
 
-const nodePath = resolve(process.argv[1]);
-const modulePath = resolve(fileURLToPath(import.meta.url));
-const isCLI = nodePath === modulePath;
-
-export default function main(port: number = Config.port) {
-  const requestListener = (request: IncomingMessage, response: ServerResponse) => {
-    response.setHeader('content-type', 'text/plain;charset=utf8');
-    response.writeHead(200, 'OK');
-    response.end('Olá, Hola, Hello!');
-  };
-
-  const server = createServer(requestListener);
-  if (isCLI) {
-    // STARTUP
-    server.listen(port);
-    const consumerSetup = KafkaConsumer.createKafkaConsumerSASL(
-      Config.kafkaSASLUsername,
-      Config.kafkaSASLPassword,
-      Config.kafkaBroker,
-    );
-    const dbConfig = {
-      user: Config.postgresUsername,
-      host: Config.postgresHost,
-      database: Config.postgresDatabase,
-      password: Config.postgresPassword,
-      port: Config.postgresPort,
-    };
-
-    const db = new PostgresDB(dbConfig);
-    const consumer = new KafkaConsumer(consumerSetup);
-    db.startConnection().then(() => {
-      // eslint-disable-next-line no-console
-      console.log(`🚂 Connected to postgresQL database.`);
-    });
-    consumer.subscribe(Config.kafkaTopic);
-    class Data extends DataObject {
-      ordertime!: number;
-      orderid!: number;
-    }
-    const agent: Agent = {
-      topic: Config.kafkaTopic,
-      model: new Data(),
-      job: async message => {
-        // eslint-disable-next-line no-console
-        console.log('agent executed: ' + message.orderid);
-      },
-    };
-    consumer.addAgent(agent);
-    consumer.startConsumer().then(() => {
-      // eslint-disable-next-line no-console
-      console.log(`🚂 Listening on port: ${port}`);
-    });
-
-    // SHUTDOWN
-    function gracefulShutdown() {
-      // eslint-disable-next-line no-console
-      console.log('\n⚠️  Starting shutdown process...');
-      setTimeout(() => {
-        // eslint-disable-next-line no-console
-        console.log('\t🤞 Shutting down application');
-        consumer.shutdown();
-        // stop the server from accepting new connections
-        server.close(function () {
-          // eslint-disable-next-line no-console
-          console.log('\t👋 All requests stopped, shutting down');
-          // once the server is not accepting connections, exit
-          process.exit();
-        });
-      }, 0);
-    }
-
-    process.on('SIGTERM', gracefulShutdown);
-    process.on('SIGINT', gracefulShutdown);
-  }
-
-  return server;
+// kafka consumer config
+const consumer = new KafkaConsumer({
+  saslUsername: Config.kafkaSASLUsername,
+  saslPassword: Config.kafkaSASLPassword,
+  broker: Config.kafkaBroker,
+});
+// subscribe to topics
+consumer.subscribe(Config.kafkaTopic);
+// define data model to deserialize messages
+class Data extends DataObject {
+  ordertime!: number;
+  orderid!: number;
 }
-
-if (isCLI) {
-  main();
-}
+// create agent to handle topic messages with data model and asynchronous job
+const agent: Agent = {
+  topic: Config.kafkaTopic,
+  model: new Data(),
+  job: async (message: Data) => {
+    // eslint-disable-next-line no-console
+    console.log('agent executed: ' + message.orderid);
+  },
+};
+// add agent to consumer
+consumer.addAgent(agent);
+// add consumer to app
+app.addConsumer(consumer);
+// init app
+app.startServer();

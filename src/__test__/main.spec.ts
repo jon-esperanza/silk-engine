@@ -7,7 +7,7 @@ import { spawn } from 'child_process';
 import SuperTest from 'supertest';
 import Path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import main from '../main.js';
+import main from '../app.js';
 
 describe('Example Test', function () {
   it('should GET / with 200 OK', function () {
