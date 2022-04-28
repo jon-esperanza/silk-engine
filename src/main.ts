@@ -31,8 +31,9 @@ const agent: Agent = {
   topic: Config.kafkaTopic,
   model: new Data(),
   job: async (message: Data) => {
+    app.db.set('order-id', message.orderid); // use inmemory keyvalue store
     // eslint-disable-next-line no-console
-    console.log('agent executed: ' + message.orderid);
+    console.log('orderid: ' + app.db.get('order-id') + ' was stored in-memory.');
   },
 };
 // add agent to consumer

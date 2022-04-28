@@ -11,16 +11,20 @@ import { Application } from 'express';
 import express from 'express';
 import KafkaConsumer from './kafka/consumer.js';
 import { Server } from 'http';
+import { createDatabase } from './db/inMemory.js';
+import { Database } from './db/types.js';
 
 class App {
   private consumers: KafkaConsumer[];
   private port: number = Config.port;
   private app: Application;
   private server!: Server;
+  public db: Database;
 
   constructor() {
     this.consumers = [];
     this.app = express();
+    this.db = createDatabase();
   }
 
   public startServer() {

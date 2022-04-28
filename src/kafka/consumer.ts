@@ -62,7 +62,7 @@ export default class KafkaConsumer {
 
   private createKafkaConsumerSASL(config: KafkaSASLConfig): Consumer {
     const kafka = new Kafka({
-      clientId: 'insightql-consumer',
+      clientId: 'insightql-consumer-' + this.consumerId,
       ssl: {
         rejectUnauthorized: true,
       },
