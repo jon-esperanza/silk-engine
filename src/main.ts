@@ -13,6 +13,13 @@ import { Config } from './config.js';
 import KafkaConsumer from './kafka/consumer.js';
 import { Agent, DataObject } from './kafka/types.js';
 
+// enable and configure redis
+app.useRedis({
+  host: Config.redisHost,
+  port: Config.redisPort,
+  username: Config.redisUsername,
+  password: Config.redisPassword,
+});
 // kafka consumer config
 const consumer = new KafkaConsumer({
   saslUsername: Config.kafkaSASLUsername,
@@ -31,9 +38,10 @@ const agent: Agent = {
   topic: Config.kafkaTopic,
   model: new Data(),
   job: async (message: Data) => {
-    app.db.set('order-id', message.orderid); // use inmemory keyvalue store
+    await app.db.set('order-id', message.orderid); // use redis cache
+    const data = await app.db.get('order-id');
     // eslint-disable-next-line no-console
-    console.log('orderid: ' + app.db.get('order-id') + ' was stored in-memory.');
+    console.log('orderid: ' + data + ' was stored redis.');
   },
 };
 // add agent to consumer
