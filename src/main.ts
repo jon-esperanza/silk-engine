@@ -37,8 +37,9 @@ class Data extends DataObject {
 const agent: Agent = {
   topic: Config.kafkaTopic,
   model: new Data(),
-  job: async (message: Data) => {
-    await app.db.set('order-id', message.orderid); // use redis cache
+  job: async () => {
+    /* 
+    await app.db.set('order-id', message.orderid); */ // use redis cache
     const data = await app.db.get('order-id');
     // eslint-disable-next-line no-console
     console.log('orderid: ' + data + ' was stored redis.');
