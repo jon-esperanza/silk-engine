@@ -14,6 +14,8 @@ import KafkaConsumer from './kafka/consumer.js';
 import { Server } from 'http';
 import { createDatabase } from './db/inMemory.js';
 import { Database, redisConfig } from './db/types.js';
+import { logger } from './utils/logger.js';
+import { pino } from 'pino';
 
 class App {
   private consumers: KafkaConsumer[];
@@ -34,7 +36,7 @@ class App {
       this.db = redis.createClient({ url: this.redisUrl });
       this.db.connect().then(() => {
         // eslint-disable-next-line no-console
-        console.log(`🚂 Connected to redis.`);
+        console.log('🚂 Redis connected');
       });
     } else {
       this.db = createDatabase();
@@ -47,6 +49,24 @@ class App {
     });
     process.on('SIGTERM', this.gracefulShutdown);
     process.on('SIGINT', this.gracefulShutdown);
+    process.on(
+      'uncaughtException',
+      pino.final(logger, (err, finalLogger) => {
+        finalLogger.error(err, 'uncaughtException');
+        // eslint-disable-next-line no-console
+        console.log(`⚠️  App crashed...please check your error logs to understand what happened`);
+        process.exit(1);
+      }),
+    );
+    process.on(
+      'unhandledRejection',
+      pino.final(logger, (err, finalLogger) => {
+        finalLogger.error(err, 'unhandledRejection');
+        // eslint-disable-next-line no-console
+        console.log(`⚠️  App crashed...please check your error logs to understand what happened`);
+        process.exit(1);
+      }),
+    );
   }
 
   /**
@@ -70,10 +90,7 @@ class App {
    */
   private async initConsumers(): Promise<void> {
     this.consumers.forEach(async consumer => {
-      consumer.startConsumer().then(() => {
-        // eslint-disable-next-line no-console
-        console.log(`🚂 Consumer ${consumer.consumerId} connected.`);
-      });
+      consumer.startConsumer();
     });
   }
 
@@ -82,10 +99,7 @@ class App {
    */
   private async endConsumers(): Promise<void> {
     this.consumers.forEach(async consumer => {
-      consumer.shutdown().then(() => {
-        // eslint-disable-next-line no-console
-        console.log(`\t🚂 Consumer ${consumer.consumerId} disconnected.`);
-      });
+      consumer.shutdown();
     });
   }
 
@@ -104,7 +118,7 @@ class App {
         // eslint-disable-next-line no-console
         console.log('\t👋 All requests stopped, shutting down');
         // once the server is not accepting connections, exit
-        process.exit();
+        process.exit(0);
       });
     }, 0);
   }
