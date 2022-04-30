@@ -43,7 +43,7 @@ Job --> Agent
 Agent --> MessageEvent
 MessageEvent --> Topic
 ```
-As we can see, an Agent should always be fixed to a specific message event in the Kafka topic (i.e OrderPlaced, OrderDelivered). This structure allows a consistent serialization of messages with InsightQL and distributed processing of message events. We shouldn't be using a model meant for placed orders on messages about delivered orders. This atomicity is enforced by validating the Kafka message header attribute `event-type` to the MessageEvent parameter passed into the Agent.  
+As we can see, an Agent should always be fixed to a specific message event in the Kafka topic (i.e OrderPlaced, OrderDelivered). This structure allows a consistent serialization of messages with InsightQL and distributed processing of message events. We shouldn't be using a model meant for placed orders on messages about delivered orders. This atomicity is enforced by either validating the Kafka message header attribute `event-type` or the message key to the MessageEvent parameter passed into the Agent.  
 This makes sure that we **DO NOT** use the **_single user-defined MessageDataModel_** to **serialize** several **_different types of messages_** from a kafka topic.
 
 
