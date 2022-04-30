@@ -10,8 +10,9 @@
  */
 import app from './app.js';
 import { Config } from './config.js';
-import KafkaConsumer from './kafka/consumer.js';
-import { Agent, DataObject } from './kafka/types.js';
+import Agent from './kafka/models/agent.js';
+import KafkaConsumer from './kafka/models/consumer.js';
+import MessageData from './kafka/models/messageData.js';
 
 // enable and configure redis
 app.useRedis({
@@ -29,22 +30,18 @@ const consumer = new KafkaConsumer({
 // subscribe to topics
 consumer.subscribe(Config.kafkaTopic);
 // define data model to deserialize messages
-class Data extends DataObject {
+class Data extends MessageData {
   ordertime!: number;
   orderid!: number;
 }
 // create agent to handle topic messages with data model and asynchronous job
-const agent: Agent = {
-  topic: Config.kafkaTopic,
-  model: new Data(),
-  job: async () => {
-    /* 
+const agent = new Agent(Config.kafkaTopic, new Data(), async (): Promise<void> => {
+  /* 
     await app.db.set('order-id', message.orderid); */ // use redis cache
-    const data = await app.db.get('order-id');
-    // eslint-disable-next-line no-console
-    console.log('orderid: ' + data + ' was stored redis.');
-  },
-};
+  const data = await app.db.get('order-id');
+  // eslint-disable-next-line no-console
+  console.log('orderid: ' + data + ' was stored redis.');
+});
 // add agent to consumer
 consumer.addAgent(agent);
 // add consumer to app

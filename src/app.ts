@@ -10,7 +10,7 @@ import { Config } from './config.js';
 import { Application } from 'express';
 import * as redis from 'redis';
 import express from 'express';
-import KafkaConsumer from './kafka/consumer.js';
+import KafkaConsumer from './kafka/models/consumer.js';
 import { Server } from 'http';
 import { createDatabase } from './db/inMemory.js';
 import { Database, redisConfig } from './db/types.js';
@@ -89,18 +89,18 @@ class App {
    * iterate over consumers added to app, connect them to respective kafka topic
    */
   private async initConsumers(): Promise<void> {
-    this.consumers.forEach(async consumer => {
+    for (const consumer of this.consumers) {
       consumer.startConsumer();
-    });
+    }
   }
 
   /**
    * disconnect all consumers on app from kafka topics
    */
   private async endConsumers(): Promise<void> {
-    this.consumers.forEach(async consumer => {
+    for (const consumer of this.consumers) {
       consumer.shutdown();
-    });
+    }
   }
 
   /**

@@ -1,42 +1,49 @@
-export class DataObject {
-  [keys: string]: any;
+import { EachMessagePayload } from 'kafkajs';
+
+export type KafkaConsumerType = {
+  consumerId: string;
+
+  startConsumer(): Promise<void>;
+  shutdown(): Promise<void>;
+  subscribe(kafkaTopic: string, fromBeginning: boolean): void;
   /**
-   * Helps ensure that this object is ready for the next message serialization.
-   * @param obj resets this DataObject
+   * Adds an agent to the array, these agents are used to coordinate and execute jobs
+   * @param agent agent to add to kafka consumer
    */
-  public resetProperties(obj: this = this) {
-    Object.keys(obj).map(key => {
-      // Test if it's an Object
-      if (obj[key] === Object(obj[key])) {
-        this.resetProperties(obj[key]);
-        return;
-      }
-      if (obj[key] instanceof Array) obj[key] = [];
-      else obj[key] = undefined;
-    });
-  }
+  addAgent(agent: AgentType): void;
+  getAgents(): AgentType[];
+  /**
+   * handles message serialization and coordinating job execution for agents based on topic of message consumed
+   * @param message message to serialize
+   */
+  coordinateMessage(message: EachMessagePayload): Promise<void>;
+};
+
+export type CentralizedSingleInstance = {
+  [keys: string]: any;
+
+  /**
+   * Helps ensure that this single instance is cleared and ready for the next message serialization.
+   */
+  clearInstance(): void;
   /**
    * Helps ensure that the message serialization was successful.
-   * @param obj validates this DataObject
-   * @returns
+   * @returns boolean
    */
-  public validObject(obj: this = this) {
-    for (const key in obj) {
-      if (obj[key] === undefined) return false;
-    }
-    return true;
-  }
-}
+  validInstance(): boolean;
+};
 
-type Job = {
+export type JobType = {
   (...args: any): Promise<void>;
 };
 
-export interface Agent {
+export type AgentType = {
   topic: string;
-  model: DataObject;
-  job: Job;
-}
+  model: CentralizedSingleInstance;
+  job: JobType;
+
+  executeAgent(messageData: Record<string, unknown>): Promise<void>;
+};
 
 export type KafkaConfig = {
   broker: string;
