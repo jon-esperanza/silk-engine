@@ -10,7 +10,7 @@ import { Config } from './config.js';
 import { Application } from 'express';
 import * as redis from 'redis';
 import express from 'express';
-import KafkaConsumer from './kafka/models/consumer.js';
+import KafkaConsumer from './kafka/models/SilkEngine.js';
 import { Server } from 'http';
 import { createDatabase } from './db/inMemory.js';
 import { Database, redisConfig } from './db/types.js';

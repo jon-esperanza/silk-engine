@@ -1,25 +1,25 @@
 import { Consumer, ConsumerSubscribeTopic, EachMessagePayload, Kafka } from 'kafkajs';
-import { KafkaConsumerType, KafkaSASLConfig } from '../types.js';
+import { SilkEngineType, KafkaSASLConfig } from '../types.js';
 import { v4 as uuid } from 'uuid';
 import { logger } from '../../utils/logger.js';
-import Agent from './agent.js';
+import Merchant from './Merchant.js';
 
-export default class KafkaConsumer implements KafkaConsumerType {
+export default class SilkEngine implements SilkEngineType {
   public consumerId: string;
   private kafkaConsumer: Consumer;
   private kafkaTopics: ConsumerSubscribeTopic[];
-  private kafkaAgents: Agent[];
+  private merchants: Merchant[];
   private kafkaLogger: any;
 
   public constructor(consumerConfig: KafkaSASLConfig) {
     this.consumerId = uuid();
     this.kafkaConsumer = this.createKafkaConsumerSASL(consumerConfig);
     this.kafkaTopics = [];
-    this.kafkaAgents = [];
+    this.merchants = [];
     this.kafkaLogger = logger.child({ consumerId: this.consumerId });
   }
 
-  public async startConsumer(): Promise<void> {
+  public async start(): Promise<void> {
     try {
       await this.kafkaConsumer.connect().then(() => {
         this.kafkaLogger.kafka('Connected');
@@ -29,7 +29,7 @@ export default class KafkaConsumer implements KafkaConsumerType {
         await this.kafkaConsumer.subscribe(topic);
       }
       await this.kafkaConsumer.run({
-        eachMessage: async (message: EachMessagePayload) => this.coordinateMessage(message),
+        eachMessage: async (message: EachMessagePayload) => this.coordinate(message),
       });
     } catch (error) {
       this.kafkaLogger.error({ err: error, details: 'Failed to start consumer' });
@@ -50,17 +50,17 @@ export default class KafkaConsumer implements KafkaConsumerType {
     this.kafkaTopics.push(topic);
   }
 
-  public addAgent(agent: Agent): void {
-    this.kafkaAgents.push(agent);
+  public addMerchant(merchant: Merchant): void {
+    this.merchants.push(merchant);
   }
 
-  public getAgents(): Agent[] {
-    return this.kafkaAgents;
+  public getMerchants(): Merchant[] {
+    return this.merchants;
   }
 
   private createKafkaConsumerSASL(config: KafkaSASLConfig): Consumer {
     const kafka = new Kafka({
-      clientId: 'insightql-consumer-' + this.consumerId,
+      clientId: 'silk-engine-consumer-' + this.consumerId,
       ssl: {
         rejectUnauthorized: true,
       },
@@ -71,11 +71,11 @@ export default class KafkaConsumer implements KafkaConsumerType {
       },
       brokers: [config.broker],
     });
-    const consumer = kafka.consumer({ groupId: 'insightql-consumers' });
+    const consumer = kafka.consumer({ groupId: 'silk-engine-consumers' });
     return consumer;
   }
 
-  public async coordinateMessage(messagePayload: EachMessagePayload): Promise<void> {
+  public async coordinate(messagePayload: EachMessagePayload): Promise<void> {
     const { topic, partition, message } = messagePayload;
     const jsonData = JSON.parse(String(message.value)); // message.value into generic object
     const key = String(message.key);
@@ -84,11 +84,11 @@ export default class KafkaConsumer implements KafkaConsumerType {
       key: key,
     });
     await Promise.all(
-      this.kafkaAgents.map(async agent => {
-        // run async agents in parallel
-        const validateSrc = agent.validateHeader ? message.headers : key;
-        if (topic === agent.topic && validateSrc === agent.event && jsonData != undefined) {
-          await agent.executeAgent(jsonData);
+      this.merchants.map(async merchant => {
+        // run async merchants in parallel
+        const validateSrc = merchant.validateHeader ? message.headers : key;
+        if (topic === merchant.topic && validateSrc === merchant.event && jsonData != undefined) {
+          await merchant.execute(jsonData);
         }
       }),
     );

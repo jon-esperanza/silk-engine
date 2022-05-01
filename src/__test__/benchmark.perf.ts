@@ -1,6 +1,6 @@
 import { EachMessagePayload, KafkaMessage } from 'kafkajs';
-import Agent from '../kafka/models/agent.js';
-import MessageData from '../kafka/models/messageData.js';
+import Merchant from '../kafka/models/Merchant.js';
+import MessageData from '../kafka/models/MessageData.js';
 
 class Data extends MessageData {
   ordertime!: number;
@@ -15,12 +15,12 @@ class Data extends MessageData {
   orderidk!: number;
 }
 
-const agent = new Agent('mock-topic', 'testEvent', new Data(), async (messageData: Data): Promise<void> => {
+const merchant = new Merchant('mock-topic', 'testEvent', new Data(), async (messageData: Data): Promise<void> => {
   /* await app.db.set('order-id', message.orderid); */
   // use redis cache
 });
 
-let mockAgents = [agent];
+let mockMerchants = [merchant];
 const mockMessage: EachMessagePayload = {
   topic: 'mock-topic',
   partition: 4,
@@ -44,11 +44,11 @@ async function coordinateMessage(messagePayload: EachMessagePayload): Promise<vo
   const jsonData = JSON.parse(String(message.value)); // message.value into generic object
   const key = String(message.key);
   await Promise.all(
-    mockAgents.map(async agent => {
-      // run async agents in parallel
-      const validateSrc = agent.validateHeader ? message.headers : key;
-      if (topic === agent.topic && validateSrc === agent.event && jsonData != undefined) {
-        await agent.executeAgent(jsonData);
+    mockMerchants.map(async merchant => {
+      // run async merchants in parallel
+      const validateSrc = merchant.validateHeader ? message.headers : key;
+      if (topic === merchant.topic && validateSrc === merchant.event && jsonData != undefined) {
+        await merchant.execute(jsonData);
       }
     }),
   );
@@ -61,7 +61,7 @@ for (let i = 0; i < 100; i++) {
   const time = end - start;
   singleAvg += time;
 }
-mockAgents = [agent, agent, agent, agent, agent];
+mockMerchants = [merchant, merchant, merchant, merchant, merchant];
 let multipleAvg = 0;
 for (let i = 0; i < 100; i++) {
   const start = performance.now();
@@ -72,6 +72,6 @@ for (let i = 0; i < 100; i++) {
 }
 
 // eslint-disable-next-line no-console
-console.log('event processing (1 agent, 1 job each):' + (singleAvg / 100).toFixed(3) + 'ms');
+console.log('event processing (1 merchant, 1 job each):' + (singleAvg / 100).toFixed(3) + 'ms');
 // eslint-disable-next-line no-console
-console.log('event processing (5 agent(s), 1 job each):' + (multipleAvg / 100).toFixed(3) + 'ms');
+console.log('event processing (5 merchants, 1 job each):' + (multipleAvg / 100).toFixed(3) + 'ms');
