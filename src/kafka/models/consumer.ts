@@ -78,14 +78,16 @@ export default class KafkaConsumer implements KafkaConsumerType {
   public async coordinateMessage(messagePayload: EachMessagePayload): Promise<void> {
     const { topic, partition, message } = messagePayload;
     const jsonData = JSON.parse(String(message.value)); // message.value into generic object
+    const key = String(message.key);
     this.kafkaLogger.kafka({
       prefix: `${topic}[${partition} | ${message.offset}]`,
-      key: String(message.key),
+      key: key,
     });
     await Promise.all(
       this.kafkaAgents.map(async agent => {
         // run async agents in parallel
-        if (topic === agent.topic && jsonData != undefined) {
+        const validateSrc = agent.validateHeader ? message.headers : key;
+        if (topic === agent.topic && validateSrc === agent.event && jsonData != undefined) {
           await agent.executeAgent(jsonData);
         }
       }),
