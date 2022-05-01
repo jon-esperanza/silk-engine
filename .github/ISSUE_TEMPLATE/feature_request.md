@@ -1,8 +1,8 @@
 ---
 name: Feature request
 about: Suggest an idea for this project
-title: "\\U0001F680"
-labels: ''
+title: ''
+labels: enhancement
 assignees: ''
 
 ---
