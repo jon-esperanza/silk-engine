@@ -20,7 +20,7 @@ const agent = new Agent('mock-topic', 'testEvent', new Data(), async (messageDat
   // use redis cache
 });
 
-const mockAgents = [agent, agent, agent, agent, agent];
+let mockAgents = [agent];
 const mockMessage: EachMessagePayload = {
   topic: 'mock-topic',
   partition: 4,
@@ -37,7 +37,7 @@ const mockMessage: EachMessagePayload = {
   heartbeat: async () => {},
 };
 
-let avg = 0;
+let singleAvg = 0;
 
 async function coordinateMessage(messagePayload: EachMessagePayload): Promise<void> {
   const { topic, partition, message } = messagePayload;
@@ -59,7 +59,19 @@ for (let i = 0; i < 100; i++) {
   await coordinateMessage(mockMessage);
   const end = performance.now();
   const time = end - start;
-  avg += time;
+  singleAvg += time;
 }
+mockAgents = [agent, agent, agent, agent, agent];
+let multipleAvg = 0;
+for (let i = 0; i < 100; i++) {
+  const start = performance.now();
+  await coordinateMessage(mockMessage);
+  const end = performance.now();
+  const time = end - start;
+  multipleAvg += time;
+}
+
 // eslint-disable-next-line no-console
-console.log('event processing (' + mockAgents.length + ' agent(s), 1 job each):' + (avg / 100).toFixed(3) + 'ms');
+console.log('event processing (1 agent, 1 job each):' + (singleAvg / 100).toFixed(3) + 'ms');
+// eslint-disable-next-line no-console
+console.log('event processing (5 agent(s), 1 job each):' + (multipleAvg / 100).toFixed(3) + 'ms');
