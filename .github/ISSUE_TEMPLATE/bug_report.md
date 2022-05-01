@@ -7,16 +7,17 @@ assignees: ''
 
 ---
 
+## :bug: Bug report
 <!--- Provide a general summary of the issue in the Title above -->
 
-## Expected Behavior
+### Expected Behavior  
 <!--- Tell us what should happen -->
 
-## Current Behavior
+### Current Behavior  
 <!--- Tell us what happens instead of the expected behavior -->
 
-## Possible Solution
+### Possible Solution  
 <!--- Not obligatory, but suggest a fix/reason for the bug, -->
 
-## Necessity
+### Necessity  
 <!--- Tell us why this needs to be addressed -->
