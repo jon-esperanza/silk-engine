@@ -1,8 +1,8 @@
 import { logger } from '../../utils/logger.js';
-import { AgentType, JobType } from '../types.js';
-import MessageData from './messageData.js';
+import { MerchantType, JobType } from '../types.js';
+import MessageData from './MessageData.js';
 
-export default class Agent implements AgentType {
+export default class Merchant implements MerchantType {
   public topic: string;
   public event: string;
   public model: MessageData;
@@ -19,7 +19,7 @@ export default class Agent implements AgentType {
     }
   }
 
-  public async executeAgent(messageData: Record<string, unknown>): Promise<void> {
+  public async execute(messageData: Record<string, unknown>): Promise<void> {
     const data = Object.assign(this.model, messageData); // serialize generic object properties to single model instance aka cache message data
     if (!this.model.validInstance()) {
       // validate the serialization

@@ -1,22 +1,22 @@
 import { EachMessagePayload } from 'kafkajs';
 
-export type KafkaConsumerType = {
+export type SilkEngineType = {
   consumerId: string;
 
-  startConsumer(): Promise<void>;
+  start(): Promise<void>;
   shutdown(): Promise<void>;
   subscribe(kafkaTopic: string, fromBeginning: boolean): void;
   /**
-   * Adds an agent to the array, these agents are used to coordinate and execute jobs
-   * @param agent agent to add to kafka consumer
+   * Adds a merchant to the workflow for coordinating and executing jobs
+   * @param merchant
    */
-  addAgent(agent: AgentType): void;
-  getAgents(): AgentType[];
+  addMerchant(merchant: MerchantType): void;
+  getMerchants(): MerchantType[];
   /**
-   * handles message serialization and coordinating job execution for agents based on topic of message consumed
+   * handles message serialization and coordinating job execution for merchants based on topic of message consumed
    * @param message message to serialize
    */
-  coordinateMessage(message: EachMessagePayload): Promise<void>;
+  coordinate(message: EachMessagePayload): Promise<void>;
 };
 
 export type CentralizedSingleInstance = {
@@ -37,13 +37,13 @@ export type JobType = {
   (...args: any): Promise<void>;
 };
 
-export type AgentType = {
+export type MerchantType = {
   topic: string;
   event: string;
   model: CentralizedSingleInstance;
   job: JobType;
 
-  executeAgent(messageData: Record<string, unknown>): Promise<void>;
+  execute(messageData: Record<string, unknown>): Promise<void>;
 };
 
 export type KafkaConfig = {
