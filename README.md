@@ -75,7 +75,7 @@ This single instance data object for each agent has many advantages to our engin
 
 This is the estimated performance overhead for some of InsightQL's processes and workflow. 
 
-**Event Message Processing (Single Agent)**: 0.017ms
+**Event Message Processing (Single Agent)**: 0.018ms
 
-**Event Message Processing (Multiple Agents: 5)**: 0.038ms
+**Event Message Processing (Multiple Agents: 5)**: 0.042ms
 

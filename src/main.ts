@@ -30,17 +30,22 @@ const consumer = new KafkaConsumer({
 // subscribe to topics
 consumer.subscribe(Config.kafkaTopic);
 // define data model to deserialize messages
-class Data extends MessageData {
-  ordertime!: number;
-  orderid!: number;
+class MarkedBook extends MessageData {
+  bookId!: number;
+  userId!: number;
+  title!: string;
+  author!: string;
+  genre!: string;
+  dateMarked!: string;
 }
 // create agent to handle topic messages with data model and asynchronous job
-const agent = new Agent(Config.kafkaTopic, new Data(), async (): Promise<void> => {
-  /* 
-    await app.db.set('order-id', message.orderid); */ // use redis cache
-  const data = await app.db.get('order-id');
+const agent = new Agent(Config.kafkaTopic, '18', new MarkedBook(), async (messageData: MarkedBook): Promise<void> => {
+  const prefix = `user:${messageData.userId}:markedBooks`;
+  const db = app.getRedis();
+  await db.sAdd(prefix, JSON.stringify(messageData)); // use redis cache
+  const data = await db.sMembers(prefix);
   // eslint-disable-next-line no-console
-  console.log('orderid: ' + data + ' was stored redis.');
+  console.log({ user: messageData.userId, markedBooks: data.map(obj => JSON.parse(obj)) });
 });
 // add agent to consumer
 consumer.addAgent(agent);

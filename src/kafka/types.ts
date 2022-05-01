@@ -39,6 +39,7 @@ export type JobType = {
 
 export type AgentType = {
   topic: string;
+  event: string;
   model: CentralizedSingleInstance;
   job: JobType;
 
