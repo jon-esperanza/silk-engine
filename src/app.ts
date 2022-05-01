@@ -16,6 +16,7 @@ import { createDatabase } from './db/inMemory.js';
 import { Database, redisConfig } from './db/types.js';
 import { logger } from './utils/logger.js';
 import { pino } from 'pino';
+import { RedisClientType } from '@node-redis/client';
 
 class App {
   private consumers: KafkaConsumer[];
@@ -24,7 +25,8 @@ class App {
   private server!: Server;
   private redisEnabled: boolean = false;
   private redisUrl: string = '';
-  public db!: Database | any;
+  private redis!: RedisClientType;
+  private inmem!: Database;
 
   constructor() {
     this.consumers = [];
@@ -33,14 +35,14 @@ class App {
 
   public startServer() {
     if (this.redisEnabled) {
-      this.db = redis.createClient({ url: this.redisUrl });
-      this.db.connect().then(() => {
+      // start redis if configured
+      this.redis = redis.createClient({ url: this.redisUrl });
+      this.redis.connect().then(() => {
         // eslint-disable-next-line no-console
         console.log('🚂 Redis connected');
       });
-    } else {
-      this.db = createDatabase();
     }
+    this.inmem = createDatabase(); // start in-memory k/v store
     this.server = this.app.listen(this.port, () => {
       this.initConsumers().then(() => {
         // eslint-disable-next-line no-console
@@ -83,6 +85,25 @@ class App {
       this.redisUrl = `redis://${config.username}:${config.password}@${config.host}:${config.port}`;
     }
     this.redisEnabled = true;
+  }
+
+  /**
+   * if redis has been enabled this will return the initiated redis client instance
+   * @returns redis client instance
+   */
+  public getRedis(): RedisClientType {
+    if (!this.redisEnabled) {
+      throw Error('Redis is not configured or connected. Could not get redis client instance.');
+    }
+    return this.redis;
+  }
+
+  /**
+   * default memory to cache data simply.
+   * @returns in memory k/v store instance
+   */
+  public getInMemory(): Database {
+    return this.inmem;
   }
 
   /**
