@@ -15,7 +15,7 @@ class Data extends MessageData {
   orderidk!: number;
 }
 
-const agent = new Agent('mock-topic', new Data(), async (messageData: Data): Promise<void> => {
+const agent = new Agent('mock-topic', 'testEvent', new Data(), async (messageData: Data): Promise<void> => {
   /* await app.db.set('order-id', message.orderid); */
   // use redis cache
 });
@@ -25,7 +25,7 @@ const mockMessage: EachMessagePayload = {
   topic: 'mock-topic',
   partition: 4,
   message: {
-    key: Buffer.from('18'),
+    key: Buffer.from('testEvent'),
     value: Buffer.from(
       '{"orderid": 18, "ordertime": 23, "orderida": 1, "orderids": 1, "orderidd": 1, "orderidf": 1, "orderidg": 1, "orderidh": 1, "orderidj": 1, "orderidk": 1}',
     ),
@@ -39,36 +39,27 @@ const mockMessage: EachMessagePayload = {
 
 let avg = 0;
 
-async function handleMessage(messagePayload: EachMessagePayload): Promise<void> {
-  const start = performance.now();
+async function coordinateMessage(messagePayload: EachMessagePayload): Promise<void> {
   const { topic, partition, message } = messagePayload;
   const jsonData = JSON.parse(String(message.value)); // message.value into generic object
-  /* this.kafkaLogger.kafka({
-    prefix: `${topic}[${partition} | ${message.offset}]`,
-    key: String(message.key),
-    value: jsonData, // remove bc sensitive data
-  }); */
+  const key = String(message.key);
   await Promise.all(
     mockAgents.map(async agent => {
       // run async agents in parallel
-      if (topic === agent.topic && jsonData != undefined) {
+      const validateSrc = agent.validateHeader ? message.headers : key;
+      if (topic === agent.topic && validateSrc === agent.event && jsonData != undefined) {
         await agent.executeAgent(jsonData);
       }
     }),
   );
+}
+
+for (let i = 0; i < 100; i++) {
+  const start = performance.now();
+  await coordinateMessage(mockMessage);
   const end = performance.now();
   const time = end - start;
   avg += time;
 }
-
-for (let i = 0; i < 100; i++) {
-  await handleMessage(mockMessage);
-}
 // eslint-disable-next-line no-console
-console.log(
-  'average time for each message consumed (' +
-    mockAgents.length +
-    ' agent(s), 1 job each):' +
-    (avg / 100).toFixed(3) +
-    'ms',
-);
+console.log('event processing (' + mockAgents.length + ' agent(s), 1 job each):' + (avg / 100).toFixed(3) + 'ms');
