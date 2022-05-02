@@ -1,6 +1,6 @@
 # Silk Engine
-simple library for event processing with Kafka. 
-inspired by Robinhood's [Faust](https://faust.readthedocs.io/en/latest/introduction.html)
+Simple library for event processing with Kafka.  
+Built on top of [KafkaJS](https://kafka.js.org/) and inspired by Robinhood's [Faust](https://faust.readthedocs.io/en/latest/introduction.html)
 
 ## Project vision
 
@@ -37,10 +37,14 @@ Silk Engine is a great way to coordinate and execute event-driven jobs. The way 
 flowchart LR;
 MessageData --> Merchant
 Job --> Merchant
-Merchant --> MessageEvent
-MessageEvent --> Topic
+Merchant --> EventType
+EventType --> Topic
 ```
-As we can see, a Merchant should always be fixed to a specific message event in the Kafka topic (i.e OrderPlaced, OrderDelivered). This structure allows a consistent serialization of messages with Silk Engine and distributed processing of message events. We shouldn't be using a model meant for placed orders on messages about delivered orders. This atomicity is enforced by either validating the Kafka message header attribute `event-type` or the message key to the MessageEvent parameter passed into the Merchant.  
+As we can see, a Merchant should always be fixed to a specific message event in the Kafka topic (i.e OrderPlaced, OrderDelivered). This structure allows a consistent serialization of messages with Silk Engine and distributed processing of message events. We shouldn't be using a model meant for placed orders on messages about delivered orders. 
+
+While we encourage good practice by having different topics per message event type, we understand sometimes it works best to keep them all in a single topic so we simply assist with the filtering and parsing of your event messages.
+
+This atomicity is enforced by either validating the Kafka message header attribute `event-type` or the message key to the `event` parameter passed into the Merchant.  
 This makes sure that we **DO NOT** use the **_single user-defined MessageData_** to **serialize** several **_different types of messages_** from a kafka topic.
 
 
